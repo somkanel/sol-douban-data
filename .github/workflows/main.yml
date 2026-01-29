@@ -1,7 +1,12 @@
 name: douban sync
 on:
   schedule:
-    - cron: '0 15 * * *' # 每天北京时间23点运行
+    # 稍微错开整点，设定在 15:05 UTC (北京时间 23:05)
+    - cron: '5 15 * * *'
+  # 增加 push 触发
+  push:
+    branches:
+      - main
   workflow_dispatch:
 jobs:
   sync:
@@ -14,7 +19,7 @@ jobs:
         with:
           id: somkanel
           type: movie
-          format: json # 强制输出JSON格式
+          format: json
           dir: ./data
       - name: Commit
         run: |
