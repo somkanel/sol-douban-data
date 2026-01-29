@@ -22,7 +22,7 @@ jobs:
           type: movie
           format: json
           dir: ./data
-          cookie: ${{ secrets.DOUBAN_COOKIE }}
+
 
       - name: Commit and Push
         run: |
