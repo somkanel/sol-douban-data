@@ -1,21 +1,22 @@
 name: Douban mark data sync
 on:
   schedule:
-    - cron: '5 15 * * *'
-  push:
-    branches:
-      - main
+    # 每 3 小时运行一次（UTC 时间）
+    - cron: '0 */3 * * *'
   workflow_dispatch:
+  
 jobs:
-  sync:
+  douban:
+    name: Douban mark data sync
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Movie Sync
-        uses: lizheming/doumark-action@master
-        with:
-          id: somkanel
-          type: movie
-          format: json
-          dir: ./data
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: movie
+      uses: lizheming/doumark-action@master
+      with:
+        id: somkanel
+        type: movie
+        format: json
+        dir: ./data/douban
