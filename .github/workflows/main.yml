@@ -1,4 +1,4 @@
-name: douban sync
+name: Douban mark data sync
 on:
   schedule:
     - cron: '5 15 * * *'
@@ -19,12 +19,3 @@ jobs:
           type: movie
           format: json
           dir: ./data
-          # 关键点 1：移除 cookie，改用更高级的 UA 伪装（如果插件支持）
-          # 关键点 2：如果插件依然报错，我们改用它的“完全备份”模式
-      - name: Commit
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add .
-          git commit -m "Update douban data: Force Sync" || exit 0
-          git push
