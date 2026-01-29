@@ -21,6 +21,7 @@ jobs:
           type: movie
           format: json
           dir: ./data
+          cookie: ${{ secrets.DOUBAN_COOKIE }}
       - name: Commit
         run: |
           git config --global user.name 'GitHub Actions'
