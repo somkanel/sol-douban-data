@@ -24,10 +24,8 @@ jobs:
           dir: ./data
 
 
-      - name: Commit and Push
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add .
-          git commit -m "Update douban data" || exit 0
-          git push
+      - name: Commit
+        uses: EndBug/add-and-commit@v8
+        with:
+          message: 'chore: update douban data'
+          add: './data'
