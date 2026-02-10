@@ -13,22 +13,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 这一步我们不再删除 data 文件夹，而是保留它以便进行增量下载图片
       - name: Movie Sync
-        uses: lizheming/doumark-action@master
+        # 关键改动：锁定 v1 版本，这个版本对图片下载的支持更稳健
+        uses: lizheming/doumark-action@v1
         with:
           id: somkanel
           type: movie
           format: json
           dir: ./data
-          # 关键参数：开启图片下载功能，并存放在 assets 文件夹
+          # 开启图片下载
           image: true
-          imageDir: ./assets 
+          imageDir: ./assets
+          # 图片在博客里显示的路径前缀
           imagePrefix: https://cdn.jsdelivr.net/gh/somkanel/sol-douban-data/assets
           cookie: ${{ secrets.DOUBAN_COOKIE }}
 
       - name: Commit and Push
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'chore: update douban data and sync images'
-          add: '.' # 提交所有变动，包括 JSON 和新下载的图片
+          message: 'chore: update data and download posters'
+          add: '.' 
