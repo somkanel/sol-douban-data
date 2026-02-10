@@ -1,3 +1,4 @@
+
 name: douban sync
 on:
   schedule:
@@ -13,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 1. 抓取豆瓣数据
+      # 只同步 JSON 数据，不下载图片
       - name: Movie Sync
         uses: lizheming/doumark-action@master
         with:
@@ -23,23 +24,8 @@ jobs:
           dir: ./data
           cookie: ${{ secrets.DOUBAN_COOKIE }}
 
-      # 2. 核心补丁：利用 Linux 命令自动下载 JSON 里的图片到 assets 文件夹
-      # 这个命令会自动提取 JSON 里的 cover_url 并保存为图片
-      - name: Download Posters
-        run: |
-          mkdir -p assets
-          # 使用 grep 提取所有的图片链接
-          grep -oE 'https://img[0-9].doubanio.com/[^"]+' data/movie.json | sort | uniq | while read url; do
-            filename=$(basename "$url")
-            if [ ! -f "assets/$filename" ]; then
-              echo "Downloading $filename..."
-              curl -s -H "Referer: https://www.douban.com" "$url" -o "assets/$filename" || true
-            fi
-          done
-
-      # 3. 提交变动
       - name: Commit and Push
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'chore: sync movie data and local posters'
-          add: '.'
+          message: 'chore: update douban data'
+          add: './data'
