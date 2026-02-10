@@ -13,23 +13,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # 1. 抓取豆瓣数据
       - name: Movie Sync
-        # 关键改动：锁定 v1 版本，这个版本对图片下载的支持更稳健
-        uses: lizheming/doumark-action@v1
+        uses: lizheming/doumark-action@master
         with:
           id: somkanel
           type: movie
           format: json
           dir: ./data
-          # 开启图片下载
-          image: true
-          imageDir: ./assets
-          # 图片在博客里显示的路径前缀
-          imagePrefix: https://cdn.jsdelivr.net/gh/somkanel/sol-douban-data/assets
           cookie: ${{ secrets.DOUBAN_COOKIE }}
 
+      # 2. 核心补丁：利用 Linux 命令自动下载 JSON 里的图片到 assets 文件夹
+      # 这个命令会自动提取 JSON 里的 cover_url 并保存为图片
+      - name: Download Posters
+        run: |
+          mkdir -p assets
+          # 使用 grep 提取所有的图片链接
+          grep -oE 'https://img[0-9].doubanio.com/[^"]+' data/movie.json | sort | uniq | while read url; do
+            filename=$(basename "$url")
+            if [ ! -f "assets/$filename" ]; then
+              echo "Downloading $filename..."
+              curl -s -H "Referer: https://www.douban.com" "$url" -o "assets/$filename" || true
+            fi
+          done
+
+      # 3. 提交变动
       - name: Commit and Push
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'chore: update data and download posters'
-          add: '.' 
+          message: 'chore: sync movie data and local posters'
+          add: '.'
