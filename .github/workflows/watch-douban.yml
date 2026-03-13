@@ -2,7 +2,7 @@ name: watch douban for new movies
 
 on:
   schedule:
-    - cron: "0 * * * *"      # 每小时整点运行（北京时间每小时一次）
+    - cron: "0 * * * *"      # 每小时整点运行
   workflow_dispatch:
 
 concurrency:
@@ -29,48 +29,47 @@ jobs:
             echo "📅 本地最新记录时间: $LAST_TIME"
           else
             echo "last_local=" >> $GITHUB_OUTPUT
-            echo "⚠️ 未找到本地 movie.json，使用空值"
+            echo "⚠️ 本地 movie.json 不存在"
           fi
 
-      - name: Fetch latest record from Douban
+      - name: Fetch latest from Douban
         id: douban
         run: |
-          echo "正在从豆瓣获取最新观影记录..."
+          echo "🔍 正在从豆瓣获取最新观影记录..."
           curl -s -H "User-Agent: Mozilla/5.0" \
             "https://m.douban.com/rexxar/api/v2/user/somkanel/interests?type=movie&status=done&count=1" \
-            > douban_latest.json
+            > latest.json
           
-          LATEST_TIME=$(jq -r '.interests[0].create_time // ""' douban_latest.json)
+          LATEST_TIME=$(jq -r '.interests[0].create_time // ""' latest.json)
           echo "latest_douban=$LATEST_TIME" >> $GITHUB_OUTPUT
           
           echo "📡 豆瓣最新记录时间: $LATEST_TIME"
-          cat douban_latest.json | jq '.interests[0] | {create_time, subject_title: .subject.title}' || true
-          rm -f douban_latest.json
+          rm -f latest.json
 
-      - name: Compare and decide whether to sync
+      - name: Compare times
         id: decide
         run: |
           LOCAL="${{ steps.local.outputs.last_local }}"
           DOUBAN="${{ steps.douban.outputs.latest_douban }}"
           
-          echo "本地最后时间 : $LOCAL"
-          echo "豆瓣最新时间 : $DOUBAN"
+          echo "本地最后时间: $LOCAL"
+          echo "豆瓣最新时间: $DOUBAN"
           
           if [ -n "$DOUBAN" ] && [ "$DOUBAN" \> "$LOCAL" ]; then
             echo "has_new=true" >> $GITHUB_OUTPUT
-            echo "🎉 发现新观影记录！将触发全量同步。"
+            echo "🎉 发现新观影记录！即将触发全量同步。"
           else
             echo "has_new=false" >> $GITHUB_OUTPUT
-            echo "✅ 没有新记录，跳过同步。"
+            echo "✅ 暂无新记录"
           fi
 
-      - name: Trigger full data sync
+      - name: Trigger full sync
         if: steps.decide.outputs.has_new == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            console.log("🚀 检测到新电影，立即触发 douban sync...");
+            console.log("🚀 检测到新电影，触发 douban sync workflow...");
             await github.rest.actions.createWorkflowDispatch({
               owner: 'somkanel',
               repo: 'sol-douban-data',
