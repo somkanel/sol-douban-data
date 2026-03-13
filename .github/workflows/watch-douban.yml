@@ -36,15 +36,34 @@ jobs:
         id: douban
         run: |
           echo "🔍 正在从豆瓣获取最新观影记录..."
-          curl -s -H "User-Agent: Mozilla/5.0" \
-            "https://m.douban.com/rexxar/api/v2/user/somkanel/interests?type=movie&status=done&count=1" \
+          
+          # 使用更稳定的接口（你的 doumark-action 内部实际使用的类似接口）
+          curl -s -f -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            -H "Referer: https://www.douban.com/" \
+            "https://www.douban.com/j/iread/review/list?start=0&count=5&status=done&type=movie&uid=somkanel" \
             > latest.json
           
-          LATEST_TIME=$(jq -r '.interests[0].create_time // ""' latest.json)
-          echo "latest_douban=$LATEST_TIME" >> $GITHUB_OUTPUT
+          echo "=== 返回状态码和数据预览 ==="
+          ls -l latest.json
+          head -c 500 latest.json || cat latest.json
           
+          # 尝试提取时间
+          LATEST_TIME=$(jq -r '.reviews[0].create_time // .interests[0].create_time // ""' latest.json)
+          
+          if [ -z "$LATEST_TIME" ]; then
+            echo "⚠️ 无法解析时间，尝试备用字段..."
+            LATEST_TIME=$(jq -r '.reviews[0].updated // ""' latest.json)
+          fi
+          
+          echo "latest_douban=$LATEST_TIME" >> $GITHUB_OUTPUT
           echo "📡 豆瓣最新记录时间: $LATEST_TIME"
+          
+          # 调试输出
+          echo "=== 前两条记录标题 ==="
+          jq -r '.reviews[0:2] | .[] | "\(.create_time // "N/A") - \(.title // .subject.title // "无标题")"' latest.json || true
+          
           rm -f latest.json
+
 
       - name: Compare times
         id: decide
