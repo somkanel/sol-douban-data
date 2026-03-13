@@ -4,13 +4,12 @@ on:
   schedule:
     # GitHub cron 使用 UTC，15:05 UTC ≈ 23:05 北京时间
     - cron: "5 15 * * *"
-  push:
-    branches:
-      - main
+
+  # 通过 watch-douban.yml 或手动触发
   workflow_dispatch:
     inputs:
       triggered_by:
-        description: 'Who triggered this workflow?'
+        description: '触发来源'
         required: false
         default: 'manual'
         type: string
@@ -32,7 +31,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 关键：同步前删除旧数据，避免增量不产生 diff
       - name: Reset data directory
         shell: bash
         run: |
@@ -67,7 +65,6 @@ jobs:
           add: "./data"
           default_author: github_actions
 
-      # ==================== 新增：触发海报同步 ====================
       - name: Trigger sol-douban-images workflow
         if: success()
         uses: actions/github-script@v7
@@ -82,4 +79,3 @@ jobs:
               ref: 'main'
             });
             console.log("✅ 已成功触发海报同步 workflow");
-      # =========================================================
