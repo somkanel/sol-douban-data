@@ -2,8 +2,10 @@ name: douban sync
 
 on:
   schedule:
-    - cron: "5 15 * * *"
-
+    - cron: "0 1 * * *"     # 北京时间 09:00
+    - cron: "0 5 * * *"     # 北京时间 13:00
+    - cron: "0 9 * * *"     # 北京时间 17:00
+    - cron: "0 14 * * *"    # 北京时间 22:00
   workflow_dispatch:
     inputs:
       triggered_by:
