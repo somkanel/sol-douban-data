@@ -7,12 +7,6 @@ on:
     - cron: "0 9 * * *"     # 北京时间 17:00
     - cron: "0 14 * * *"    # 北京时间 22:00
   workflow_dispatch:
-    inputs:
-      triggered_by:
-        description: '触发来源'
-        required: false
-        default: 'manual'
-        type: string
 
 concurrency:
   group: douban-sync
@@ -20,7 +14,6 @@ concurrency:
 
 permissions:
   contents: write
-  actions: read
 
 jobs:
   sync:
@@ -31,19 +24,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync with Retry
+      - name: Reset data directory
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf ./data
+          mkdir -p ./data
+
+      - name: Movie Sync with Retry
         id: sync
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 5
+          timeout_minutes: 6
           max_attempts: 3
           retry_on: error
           command: |
-            rm -rf ./data
-            mkdir -p ./data
-            
             echo "🔄 第 ${{ steps.sync.outputs.attempt }} 次尝试同步..."
-            
+
             docker run --rm \
               -e DOUBAN_ID=somkanel \
               -e DOUBAN_TYPE=movie \
@@ -52,19 +49,30 @@ jobs:
               -e DOUBAN_COOKIE="${{ secrets.DOUBAN_COOKIE }}" \
               ghcr.io/lizheming/doumark-action:latest
 
-            COUNT=$(jq 'length' data/movie.json || echo 0)
+            COUNT=$(jq 'length' ./data/movie.json || echo 0)
             echo "本次同步获得 ${COUNT} 条记录"
-            
+
             if [ "$COUNT" -ge 800 ]; then
               echo "✅ 数据量合格 (${COUNT} 条)"
               echo "success=true" >> $GITHUB_OUTPUT
               echo "count=$COUNT" >> $GITHUB_OUTPUT
             else
-              echo "❌ 数据量不足 (${COUNT} 条 < 800)"
+              echo "❌ 数据量不足 (${COUNT} 条 < 800)，准备重试"
               echo "success=false" >> $GITHUB_OUTPUT
               echo "count=$COUNT" >> $GITHUB_OUTPUT
               exit 1
             fi
+
+      - name: Debug status
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "=== data files ==="
+          ls -lah ./data || true
+          echo "=== git status ==="
+          git status --porcelain=v1
+          echo "=== git diff (stat) ==="
+          git diff --stat || true
 
       - name: Commit and Push
         if: steps.sync.outputs.success == 'true'
@@ -88,13 +96,3 @@ jobs:
               ref: 'main'
             });
             console.log("✅ 已成功触发海报同步 workflow");
-
-      - name: Final Status
-        if: always()
-        run: |
-          if [ "${{ steps.sync.outputs.success }}" = "true" ]; then
-            echo "🎉 同步成功，最终获得 ${{ steps.sync.outputs.count }} 条记录"
-          else
-            echo "❌ 同步失败！已重试 ${{ steps.sync.outputs.attempt }} 次，最终只有 ${{ steps.sync.outputs.count }} 条记录"
-            exit 1
-          fi
