@@ -67,14 +67,14 @@ jobs:
         if: success()
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.IMAGE_SYNC_PAT }}
           script: |
-            console.log("Triggering sol-douban-images workflow...");
+            console.log("🚀 Triggering sol-douban-images workflow...");
             await github.rest.actions.createWorkflowDispatch({
               owner: 'somkanel',
               repo: 'sol-douban-images',
               workflow_id: 'sync-images.yml',
               ref: 'main'
             });
-            console.log("Successfully triggered sol-douban-images workflow.");
+            console.log("✅ Successfully triggered sol-douban-images workflow.");
         # ================================================
