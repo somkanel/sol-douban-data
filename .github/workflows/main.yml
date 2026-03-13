@@ -72,7 +72,7 @@ jobs:
         if: success()
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.IMAGE_SYNC_PAT }}
           script: |
             console.log("🚀 触发 sol-douban-images 海报同步...");
             await github.rest.actions.createWorkflowDispatch({
