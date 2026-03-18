@@ -29,8 +29,8 @@ jobs:
           rm -rf ./data
           mkdir -p ./data
 
-      - name: Movie Sync (JSON only)
-        uses: lizheming/doumark-action@master
+      - name: Movie Sync (JSON only) - Testing New Action
+        uses: somkanel/douban-sync-action@main
         with:
           id: somkanel
           type: movie
