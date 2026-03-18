@@ -6,9 +6,6 @@ on:
     - cron: "0 5 * * *"     # 北京时间 13:00
     - cron: "0 9 * * *"     # 北京时间 17:00
     - cron: "0 14 * * *"    # 北京时间 22:00
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
@@ -23,11 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v4   # v4 已经支持较新版本，但我们明确指定
 
-      # 关键：同步前删除旧数据，避免“增量不产生 diff 导致不 commit”
       - name: Reset data directory
         shell: bash
         run: |
@@ -44,7 +38,6 @@ jobs:
           dir: ./data
           cookie: ${{ secrets.DOUBAN_COOKIE }}
 
-      # 可选但强烈建议：打印一下到底有没有生成文件、git 有没有变更
       - name: Debug status
         shell: bash
         run: |
