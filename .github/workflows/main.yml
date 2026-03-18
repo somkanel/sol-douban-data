@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4   # v4 已经支持较新版本，但我们明确指定
+        uses: actions/checkout@v4
 
       - name: Reset data directory
         shell: bash
@@ -36,7 +36,8 @@ jobs:
           type: movie
           format: json
           dir: ./data
-          cookie: ${{ secrets.DOUBAN_COOKIE }}
+        env:
+          DOUBAN_COOKIE: ${{ secrets.DOUBAN_COOKIE }}
 
       - name: Debug status
         shell: bash
@@ -50,7 +51,7 @@ jobs:
           git diff --stat || true
 
       - name: Commit and Push
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10   # 升级到 v10
         with:
           message: "chore: update douban data"
           add: "./data"
