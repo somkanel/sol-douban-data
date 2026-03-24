@@ -30,7 +30,7 @@ jobs:
           mkdir -p ./data
 
       - name: Movie Sync (JSON only) 
-        uses: somkanel/douban-sync-action@v1.0.1
+        uses: somkanel/douban-sync-action@main
         with:
           id: somkanel
           type: movie
